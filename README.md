@@ -82,4 +82,4 @@ _The main hours spent on the project for each person is expected to be ~30(?) ho
        
 Snaps:
 
-![Home_Page](https://your-copied-image-address)
+![Home_Page](https://github.com/akshay0828/Valtech-miniProject-Spice-Land/blob/main/Snaps/Home-1.png)
