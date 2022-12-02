@@ -1,6 +1,6 @@
 ## TEAM 5:
 <ul>
-    <li>Akshay K Kumar</li>
+    <li>Akshay Kumar K</li>
     <li>Bharath H K</li>
     <li>Divyashree M D</li>    
     <li>Irfan Katarki</li>   
@@ -10,8 +10,8 @@
  	 
 ## Online Marketing Project
 
-Github url: https://github.com/javietanh/cs545-project.git<br/> 
-Jira Dashboard : https://www.draw.io/#G1r-3mbf9fY7bXn7rIoG83pTlCA4mc43R2
+Github url: https://github.com/akshay0828/Valtech-miniProject-Spice-Land<br/> 
+Jira Dashboard : https://homemadespices.atlassian.net/jira/dashboards/10001
 
 ## Technologies
 
@@ -32,7 +32,7 @@ Daily Scrum meeting – We holded a daily meeting every day to check everyone’
 ## Task Assignment
 <ul>
     <li>Project management and Task Distribution was handled through JIRA PROJECT MANAGEMENT TOOL </li>
-    <li>Attachment of workflow process</li>
+    <li>Attachment of workflow process: https://github.com/akshay0828/Valtech-miniProject-Spice-Land/blob/main/Spice-Land-Jira-workflow.csv</li>
     
 
 </ul>  
@@ -76,5 +76,12 @@ _The main hours spent on the project for each person is expected to be ~30(?) ho
  Project Topic – SpiceLand
  
 1.	Users: Customer, Seller and Delivery Person 
-2.	Features of each Users and further project implementational details are documented: <br/>
+2.	Features of each Users and further project implementational details are documented:
+3.	https://github.com/akshay0828/Valtech-miniProject-Spice-Land/blob/main/DOCUMENTATION.docx <br/>
        
+       
+Snaps:
+
+![Home_Page](https://github.com/akshay0828/Valtech-miniProject-Spice-Land/blob/main/Snaps/Home-1.png)
+
+![Menu](https://github.com/akshay0828/Valtech-miniProject-Spice-Land/blob/main/Snaps/Customer/Screenshot%20(33).png)
