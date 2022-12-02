@@ -11,7 +11,7 @@
 ## Online Marketing Project
 
 Github url: https://github.com/akshay0828/Valtech-miniProject-Spice-Land<br/> 
-Jira Dashboard : https://homemadespices.atlassian.net/jira/dashboards/10001
+Jira Dashboard : https://homemadespices.atlassian.net/jira/dashboards/10001 <br/>
 jira tasks: 
 https://homemadespices.atlassian.net/issues/?jql=created+%3E%3D+-30d+order+by+created+DESC&atlOrigin=eyJpIjoiYTZkMmEyMjcyZWIyNGNiN2I3YmU3ZThhZmEwNmM4MWEiLCJwIjoiaiJ9
 ## Technologies
