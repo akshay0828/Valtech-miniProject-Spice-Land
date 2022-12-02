@@ -1,6 +1,6 @@
 ## TEAM 5:
 <ul>
-    <li>Akshay K Kumar</li>
+    <li>Akshay Kumar K</li>
     <li>Bharath H K</li>
     <li>Divyashree M D</li>    
     <li>Irfan Katarki</li>   
