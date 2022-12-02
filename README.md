@@ -79,3 +79,7 @@ _The main hours spent on the project for each person is expected to be ~30(?) ho
 2.	Features of each Users and further project implementational details are documented:
 3.	https://github.com/akshay0828/Valtech-miniProject-Spice-Land/blob/main/DOCUMENTATION.docx <br/>
        
+       
+Snaps:
+
+![Home_Page](https://your-copied-image-address)
