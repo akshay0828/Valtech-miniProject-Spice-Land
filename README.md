@@ -32,7 +32,7 @@ Daily Scrum meeting – We holded a daily meeting every day to check everyone’
 ## Task Assignment
 <ul>
     <li>Project management and Task Distribution was handled through JIRA PROJECT MANAGEMENT TOOL </li>
-    <li>Attachment of workflow process</li>
+    <li>Attachment of workflow process: https://github.com/akshay0828/Valtech-miniProject-Spice-Land/blob/main/Spice-Land-Jira-workflow.csv</li>
     
 
 </ul>  
