@@ -21,7 +21,6 @@ https://homemadespices.atlassian.net/issues/?jql=created+%3E%3D+-30d+order+by+cr
     <li>Hibernate,+ JPA as ORM.</li>
     <li>H2 in memory database.</li>
     <li>Bootstrap 4.3.1 as layout and template.</li>
-    <li>jQuery + ajax for client manipulate with rest api.</li>
     <li>Springboot Security as authentication & authorization.</li>
     <li>Springboot multipart support for upload file.</li>
 </ul>
