@@ -8,7 +8,7 @@
 </ul>
 
  	 
-## Online Marketing Project
+## SpiceLand  Project
 
 Github url: https://github.com/akshay0828/Valtech-miniProject-Spice-Land<br/> 
 Jira Dashboard : https://homemadespices.atlassian.net/jira/dashboards/10001 <br/>
