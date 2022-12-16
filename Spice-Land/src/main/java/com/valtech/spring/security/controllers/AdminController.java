@@ -1,50 +1,41 @@
 
 package com.valtech.spring.security.controllers;
 
-import java.io.IOException;
 import java.util.Base64;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.valtech.spring.security.entity.Products;
 import com.valtech.spring.security.entity.User;
-import com.valtech.spring.security.repo.CartLineRepo;
-import com.valtech.spring.security.repo.UserReopsitory;
-import com.valtech.spring.security.service.CartLineService;
-import com.valtech.spring.security.service.ProductService;
-import com.valtech.spring.security.service.ValtechUserDetailsService;
+import com.valtech.spring.security.service.ProductServiceImpl;
+import com.valtech.spring.security.service.UserDetailsService;
 
 @Controller
 public class AdminController {
 
-	@Autowired
-	private UserReopsitory userRepository;
+
 
 	@Autowired
-	private ValtechUserDetailsService service;
+	private UserDetailsService service;
 
 	@Autowired
-	private ProductService productservice;
+	private ProductServiceImpl productservice;
 
 	int uid;
-
-
-
-	
-
-	
-
-	
+	int flag = 0;
 
 	/*
 	 * Once the seller/admin login, It will navigate to the adminhome.
@@ -84,7 +75,13 @@ public class AdminController {
 	@GetMapping("/admin/products/{id}")
 	public String adminproducts(@PathVariable("id") int user_id, Model model) {
 		model.addAttribute("user", service.getuser(user_id));
-
+		System.out.println("get product");
+		
+		if (flag == 1) {
+		model.addAttribute("perror", "Product is already added");
+		flag=0;
+		System.out.println("error>>>>>>>>>>");
+		}
 		return "admin/addproducts";
 	}
 
@@ -94,24 +91,57 @@ public class AdminController {
 	 */
 
 	@PostMapping("/admin/products/{id}")
+	@ExceptionHandler(MaxUploadSizeExceededException.class)
 	public String adminadd(@RequestParam(name = "productName") String productName,
 			@RequestParam(name = "eimage") MultipartFile file, @RequestParam(name = "price") double price,
 			@RequestParam(name = "weight") float weight,
 			@RequestParam(name = "productDescription") String productDescription,
-			@RequestParam(name = "quantity") int quantity, @PathVariable("id") int user_id) throws IOException {
+			@RequestParam(name = "quantity") int quantity, @PathVariable("id") int user_id, Model model)
+			throws Exception {
 
-		byte[] byteArr = file.getBytes();
-		String base64Encoded = new String(Base64.getEncoder().encode(byteArr));
-		String s = "aaa";
-		Products p = new Products(productName, price, weight, productDescription, quantity, base64Encoded, byteArr);
-		p.setUserid(user_id);
+		try {
+			byte[] byteArr = file.getBytes();
+			int size = byteArr.length;
 
-		productservice.createProduct(p);
+			System.out.println("The file size is " + size + " bytes");
+			String base64Encoded = new String(Base64.getEncoder().encode(byteArr));
 
-		System.out.println(productservice.getAllProducts());
+			List<Products> pro = productservice.getProductsbyproductname(productName);
+
+			User u1 = service.getuser(user_id);
+			
+			if (pro != null) {
+
+				for (Products produ : pro) {
+					int  n = produ.getUserid();
+					User u2 = service.getByid(n);
+					if (user_id == u2.getId()) {
+						flag = 1;
+
+					}
+				}
+			}
+			if (flag == 1) {
+				System.out.println("post error>>>>>>>>>");
+				model.addAttribute("perror", "Product is already added");
+				return "redirect:/admin/products/"+user_id;
+			}
+			Products p = new Products(productName, price, weight, productDescription, quantity, base64Encoded, byteArr);
+			
+			p.setUserid(user_id);
+			productservice.createProduct(p);
+
+			System.out.println(productservice.getAllProducts());
+		}
+
+		catch (MaxUploadSizeExceededException e) {
+
+			System.out.println("FILE ERROR");
+		}
 
 		return "redirect:/admin/adminhome/{id}";
 	}
+
 	/*
 	 * Seller/Admin can view the existing products added by that particular
 	 * seller/admin.
@@ -156,20 +186,23 @@ public class AdminController {
 	 */
 
 	@PostMapping("/products/updateproduct/{id}")
-	public ModelAndView updateProduct(@PathVariable("id") int id, @ModelAttribute Products pro,
-			@RequestParam("submit") String submit, Model model) {
-		ModelAndView view = new ModelAndView("products/afterupdateprolist");
-
+	public String updateProduct(@PathVariable("id") int id, @ModelAttribute Products pro,
+			@RequestParam("submit") String submit, Model model)  {
+		// ModelAndView view = new ModelAndView("products/afterupdateprolist");
 		Products p = productservice.getProduct(pro.getId());
-		pro.setEimage(p.getEimage());
+	
+		
+		
 		pro.setImage(p.getImage());
+		pro.setEimage(p.getEimage());
+//		int ui=productservice.getuserid(id);
+
 		productservice.updateProduct(pro);
 		pro.setUserid(uid);
-
 		model.addAttribute("add", pro.getUserid());
-		view.addObject("Products", productservice.getAllproductsbyuser(pro.getUserid()));
-
-		return view;
+		model.addAttribute("Products", productservice.getAllproductsbyuser(id));
+		
+		return "redirect:/products/prolist/" +p.getUserid();
 	}
 
 	/*

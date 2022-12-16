@@ -5,7 +5,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.provisioning.UserDetailsManager;
@@ -17,22 +16,41 @@ public class WebSecurityConfig {
 
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-		http.csrf().disable();
-		http.headers().frameOptions().disable();
+        http.csrf().disable();
+        http.headers().frameOptions().disable();
 
-		http.authorizeRequests().antMatchers("/register").anonymous()
-				// .antMatchers("/user/**").hasAnyRole("USER")
-				.antMatchers("/seller").hasAnyRole("ADMIN", "USER")
-				.antMatchers("/register", "/login", "/logout", "/resetUsers").permitAll().antMatchers("/deliveryPerson")
-				.hasAnyRole("USER").and().httpBasic();
+		http.authorizeRequests()
+		
+			 .antMatchers("/user/**").hasRole("USER")
+			.antMatchers("/admin","/admin/**").hasRole("ADMIN")
+			.antMatchers("/delivery/**").hasRole("USER")
+			.antMatchers("/register", "/login", "/logout").permitAll()
+			.and()
+			
+		      /*.formLogin()
+		      .loginPage("/login")// (5)
+		        .defaultSuccessUrl("/index") // (5)
+		        .failureUrl("/login")
+		        .permitAll()
+		        .and()*/
+		        
+		        .httpBasic();
+		     http.logout() // (6)
+		       .permitAll()
+		       .and();
+		//     .httpBasic(); // (7)
+		        return http.build();
+	
 
-		return http.build();
+	
 	}
+	
+	
 
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
+//	@Bean
+//	public PasswordEncoder passwordEncoder() {
+//		return new BCryptPasswordEncoder();
+//	}
 
 	@Bean
 	public UserDetailsManager userDetailsManager(PasswordEncoder passwordEncoder) {
@@ -41,7 +59,7 @@ public class WebSecurityConfig {
 
 		udm.createUser(User.withUsername("scott").password(passwordEncoder.encode("tiger")).roles("USER").build());
 		udm.createUser(
-				User.withUsername("admin").password(passwordEncoder.encode("admin")).roles("USER", "ADMIN").build());
+				User.withUsername("admin").password(passwordEncoder.encode("admin1")).roles("USER", "ADMIN","DELIVERY").build());
 		return udm;
 
 	}

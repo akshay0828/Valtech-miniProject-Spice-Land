@@ -1,54 +1,35 @@
 package com.valtech.spring.security.controllers;
 
-import org.hibernate.exception.ConstraintViolationException;
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.Arrays;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.ui.ModelMap;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.ModelAndView;
 
-import com.valtech.spring.security.entity.CartLine;
-import com.valtech.spring.security.entity.Products;
 import com.valtech.spring.security.entity.User;
 import com.valtech.spring.security.model.RegisterUserModel;
-import com.valtech.spring.security.repo.CartLineRepo;
-import com.valtech.spring.security.repo.UserReopsitory;
-import com.valtech.spring.security.service.CartLineService;
-import com.valtech.spring.security.service.ProductService;
-import com.valtech.spring.security.service.ValtechUserDetailsService;
+import com.valtech.spring.security.service.UserDetailsService;
 
-//@RestController
 @Controller
 public class HelloController {
-	@Autowired
-	private UserReopsitory userRepository;
 
 	@Autowired
-	private ValtechUserDetailsService service;
-
-	@Autowired
-	private ProductService productservice;
+	private UserDetailsService service;
 
 	int uid;
 
-	@Autowired
-	private CartLineRepo cartRepo;
-
-	@Autowired
-	private CartLineService cartLineService;
-
-	
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
 
 	/*
 	 * If the seller/admin is new user Navigate to the registration page .
@@ -57,21 +38,30 @@ public class HelloController {
 	public String register() {
 		return "/register";
 	}
+
 	/*
 	 * Seller/Admin should enter the details
 	 * (name,username,email,password,confirmpassword,contact,address). username
 	 * should not be repititive if so it displays error message. password and
 	 * confirmpassword should be same else error message is displayed.
 	 */
-	@PostMapping("/register")
-	public String registerUser(@ModelAttribute User user,@RequestParam("username") String username,Model model) {
 
-		//user.setRole(user.getRole());
+	@PostMapping("/register")
+	public String registerUser(@ModelAttribute User user, @RequestParam("username") String username,
+			@RequestParam("role") String role, @RequestParam("pass") String pass, Model model,
+			@RequestParam("cnfmpass") String cnfmpass) {
+
+		// user.setRole(user.getRole());
 		String u;
 		u = service.findUser(username);
 		if (u == "false") {
 
 			if (user.getPass().equals(user.getCnfmpass())) {
+				user.setPass(passwordEncoder().encode(pass));
+				user.setCnfmpass(passwordEncoder().encode(cnfmpass));
+				user.setRoles(Arrays.asList(role));
+				user.setEnabled(true);
+
 				service.createUser(user);
 				return "redirect:/login";
 			} else {
@@ -79,8 +69,9 @@ public class HelloController {
 
 				return "register";
 			}
-			
+
 		}
+		model.addAttribute("userna", "Username Already Exists");
 		return "register";
 	}
 
@@ -94,40 +85,43 @@ public class HelloController {
 		return "login";
 	}
 
-	
 	/*
 	 * Seller/Admin should provide the username and password . If username and
 	 * password of the registered seller matches it will navigate to
 	 * seller/admin dashboard else it will display the error message.
 	 */
 	@PostMapping("/login")
-	
-	public String loginUser(@ModelAttribute RegisterUserModel registerUserModel,Model model) throws Exception {
+
+	public String loginUser(@ModelAttribute RegisterUserModel registerUserModel, Model model,
+			@RequestParam(value = "error", defaultValue = "true") boolean loginError) throws Exception {
 		String url;
 		String s1 = "ADMIN";
 		String s2 = "USER";
 		String s3 = "DELIVERY";
-		
-		try{
+		// System.out.println(passwordEncoder().encode(registerUserModel.getPass()));
+		// System.out.println(service.findUserPass(registerUserModel.getUsername()));
+		// System.out.println(passwordEncoder().matches((registerUserModel.getPass()),service.findUserPass(registerUserModel.getUsername())));
+
+		try {
+
 			String role = service.getrole(registerUserModel.getUsername());
-			
-			if(role.equals(s1)){
-				if (registerUserModel.getPass().equals(service.findUserPass(registerUserModel.getUsername())) && registerUserModel.getUsername().equals(service.findUser(registerUserModel.getUsername()))) {
-					
 
-						System.out.println(
-								registerUserModel.getUsername() + service.findUser(registerUserModel.getUsername()));
-						System.out.println("PASSWORD");
-						System.out.println(registerUserModel.getPass() + service.findUser(registerUserModel.getPass()));
+			if (role.equals(s1)) {
+				if (passwordEncoder().matches((registerUserModel.getPass()),
+						service.findUserPass(registerUserModel.getUsername()))
+						&& registerUserModel.getUsername().equals(service.findUser(registerUserModel.getUsername()))) {
 
-						System.out.println("SUCCESS");
-						int id = service.getId(registerUserModel.getUsername());
+					System.out.println(
+							registerUserModel.getUsername() + service.findUser(registerUserModel.getUsername()));
+					System.out.println("PASSWORD");
+					System.out.println(registerUserModel.getPass() + service.findUser(registerUserModel.getPass()));
 
-						uid = id;
+					System.out.println("SUCCESS");
+					int id = service.getId(registerUserModel.getUsername());
 
-						return url = "redirect:/admin/adminhome/" + id;
+					uid = id;
 
-					
+					return url = "redirect:/admin/adminhome/" + id;
 
 				}
 
@@ -138,25 +132,20 @@ public class HelloController {
 					return "login";
 
 				}
-				
-				
-				
-				
-			}
-			else if(role.equals(s2)){
-				
-				if (registerUserModel.getPass().equals(service.findUserPass(registerUserModel.getUsername()))
+
+			} else if (role.equals(s2)) {
+
+				if (passwordEncoder().matches((registerUserModel.getPass()),
+						service.findUserPass(registerUserModel.getUsername()))
 						&& registerUserModel.getUsername().equals(service.findUser(registerUserModel.getUsername()))) {
-			
-						System.out.println(
-								registerUserModel.getUsername() + service.findUser(registerUserModel.getUsername()));
 
-						System.out.println("SUCCESS");
-						int id = service.getId(registerUserModel.getUsername());
+					System.out.println(
+							registerUserModel.getUsername() + service.findUser(registerUserModel.getUsername()));
 
-						return url = "redirect:/user/userhome/" + id;
+					System.out.println("SUCCESS");
+					int id = service.getId(registerUserModel.getUsername());
 
-					
+					return url = "redirect:/user/userhome/" + id;
 
 				}
 
@@ -167,36 +156,22 @@ public class HelloController {
 					return "login";
 
 				}
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
-				
+
 			}
-			
-			else if(role.equals(s3)){
-				
-				
-				if (registerUserModel.getPass().equals(service.findUserPass(registerUserModel.getUsername()))
+
+			else if (role.equals(s3)) {
+
+				if (passwordEncoder().matches((registerUserModel.getPass()),
+						service.findUserPass(registerUserModel.getUsername()))
 						&& registerUserModel.getUsername().equals(service.findUser(registerUserModel.getUsername()))) {
-					
 
-						System.out.println(
-								registerUserModel.getUsername() + service.findUser(registerUserModel.getUsername()));
+					System.out.println(
+							registerUserModel.getUsername() + service.findUser(registerUserModel.getUsername()));
 
-						System.out.println("SUCCESS");
-						int id = service.getId(registerUserModel.getUsername());
+					System.out.println("SUCCESS");
+					int id = service.getId(registerUserModel.getUsername());
 
-						return url = "redirect:/delivery/deliverhome/" + id;
-
-					
+					return url = "redirect:/delivery/deliverhome/" + id;
 
 				}
 
@@ -204,23 +179,20 @@ public class HelloController {
 					String message = "Invalid Username and Password";
 					System.out.println(message);
 					model.addAttribute("mess", message);
-					return "delivery/login";
+					return "login";
 
 				}
-				
 
-				
 			}
-			
-		}
-		catch (Exception n) {
+
+		} catch (Exception n) {
 			String message = "Invalid Username and Password";
 			System.out.println(message);
 			model.addAttribute("mess", message);
-			return "user/login";
+			return "login";
 		}
 		return "login";
-		
+
 	}
 	/*
 	 * If seller/admin forgets password,will have an option to change the
@@ -228,13 +200,11 @@ public class HelloController {
 	 * 
 	 */
 
-	
 	@GetMapping("/forgotpassword")
 	public String adminForgotPassword() {
 		return "forgotpassword";
 	}
-	
-	
+
 	/*
 	 * Seller/Admin should enter the username If the username exists it wil
 	 * navigate to changepassword page else it will display the error message
@@ -256,8 +226,7 @@ public class HelloController {
 			return "redirect:/changepassword/" + username;
 		}
 	}
-	
-	
+
 	/*
 	 * If the username entered in the forgot password page, it will navigate to
 	 * changepassword page.
@@ -281,10 +250,11 @@ public class HelloController {
 		if (password.equals(confirmPassword)) {
 			User u;
 			u = service.findentierUser(username);
-			u.setPass(password);
+			u.setPass(passwordEncoder().encode(password));
+			u.setCnfmpass(passwordEncoder().encode(confirmPassword));
 			service.updateUser(u);
 			System.out.println(u.getPass());
-			return "/login";
+			return "redirect:/login";
 
 		} else {
 			model.addAttribute("me", "Password And ConfirmPassword Does Not match");
@@ -294,8 +264,7 @@ public class HelloController {
 		}
 
 	}
-	
-	
+
 	@GetMapping("/index")
 	public String index() {
 		return "Index";
