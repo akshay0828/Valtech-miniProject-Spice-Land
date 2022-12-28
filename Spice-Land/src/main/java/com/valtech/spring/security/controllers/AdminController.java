@@ -4,6 +4,8 @@ package com.valtech.spring.security.controllers;
 import java.util.Base64;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,12 +23,11 @@ import org.springframework.web.servlet.ModelAndView;
 import com.valtech.spring.security.entity.Products;
 import com.valtech.spring.security.entity.User;
 import com.valtech.spring.security.service.ProductServiceImpl;
+import com.valtech.spring.security.service.RoleService;
 import com.valtech.spring.security.service.UserDetailsService;
 
 @Controller
 public class AdminController {
-
-
 
 	@Autowired
 	private UserDetailsService service;
@@ -34,8 +35,13 @@ public class AdminController {
 	@Autowired
 	private ProductServiceImpl productservice;
 
+	@Autowired
+	private RoleService roleService;
+
 	int uid;
 	int flag = 0;
+
+	private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
 
 	/*
 	 * Once the seller/admin login, It will navigate to the adminhome.
@@ -43,13 +49,15 @@ public class AdminController {
 	@GetMapping("/admin/adminhome/{id}")
 	public String adminhome(@PathVariable("id") int id, ModelMap model) {
 
-		System.out.println(id);
+		logger.info("Navigating towards SELLER dashboard with the user-id " + id);
 
 		User u = service.getUsername(id);
-		System.out.println(service.getUsername(id));
+
 		model.addAttribute("add", u.getName());
 
 		model.addAttribute("user", service.getuser(id));
+
+		logger.debug("The seller " + u.getName() + "has been succesfully entered the dashboard");
 
 		return "/admin/adminhome";
 	}
@@ -75,12 +83,15 @@ public class AdminController {
 	@GetMapping("/admin/products/{id}")
 	public String adminproducts(@PathVariable("id") int user_id, Model model) {
 		model.addAttribute("user", service.getuser(user_id));
-		System.out.println("get product");
-		
+		User u = service.getUsername(user_id);
+		logger.info("Navigation towards adding new products by the seller " + user_id);
+
+		logger.info("Checking whether the product added is new/existing one");
 		if (flag == 1) {
-		model.addAttribute("perror", "Product is already added");
-		flag=0;
-		System.out.println("error>>>>>>>>>>");
+			model.addAttribute("perror", "Product is already added");
+			flag = 0;
+			// System.out.println("error>>>>>>>>>>");
+
 		}
 		return "admin/addproducts";
 	}
@@ -100,43 +111,61 @@ public class AdminController {
 			throws Exception {
 
 		try {
+
+			logger.info("Working towards logic of image upload");
 			byte[] byteArr = file.getBytes();
 			int size = byteArr.length;
 
-			System.out.println("The file size is " + size + " bytes");
+			logger.debug("The file size " + size + " +bytes");
+
+			// System.out.println("The file size is " + size + " bytes");
 			String base64Encoded = new String(Base64.getEncoder().encode(byteArr));
 
 			List<Products> pro = productservice.getProductsbyproductname(productName);
 
 			User u1 = service.getuser(user_id);
-			
-			if (pro != null) {
 
+			if (pro != null) {
+				logger.info("Checking whether the product added is new/existing one");
 				for (Products produ : pro) {
-					int  n = produ.getUserid();
-					User u2 = service.getByid(n);
-					if (user_id == u2.getId()) {
-						flag = 1;
+					User n = produ.getUser();
+					String p = produ.getProductName();
+
+					if (p.equalsIgnoreCase(productName)) {
+						if (user_id == n.getId()) {
+
+							flag = 1; // showing status that user has addded the
+						} // product already
 
 					}
 				}
 			}
 			if (flag == 1) {
-				System.out.println("post error>>>>>>>>>");
+
+				logger.error(
+						"the product " + productName + " is already added to the list by the seller " + u1.getName());
 				model.addAttribute("perror", "Product is already added");
-				return "redirect:/admin/products/"+user_id;
+				return "redirect:/admin/products/" + user_id;
 			}
 			Products p = new Products(productName, price, weight, productDescription, quantity, base64Encoded, byteArr);
-			
-			p.setUserid(user_id);
-			productservice.createProduct(p);
 
-			System.out.println(productservice.getAllProducts());
+			User u = service.getuser(user_id);
+			p.setUser(u);
+			productservice.createProduct(p);
+			// p.setUser(u);
+			logger.debug("Adding the " + productName + "from the seller " + u1.getName());
+
+			logger.debug("Displaying products " + productservice.getAllproductsbyuser(u) + "added by the seller "
+					+ u1.getName());
+
+			// System.out.println(productservice.getAllProducts());
 		}
 
 		catch (MaxUploadSizeExceededException e) {
 
-			System.out.println("FILE ERROR");
+			logger.debug("FILE ERROR");
+
+			// System.out.println("FILE ERROR");
 		}
 
 		return "redirect:/admin/adminhome/{id}";
@@ -150,9 +179,16 @@ public class AdminController {
 	@GetMapping("/products/prolist/{id}")
 	public String listpro(Model model, @PathVariable("id") int user_id) {
 
-		model.addAttribute("user", service.getuser(user_id));
+		User user = service.getUsername(user_id);
 
-		model.addAttribute("Products", productservice.getAllproductsbyuser(user_id));
+		logger.info("Displaying the entire product list added by the seller " + user.getName());
+
+		model.addAttribute("user", service.getuser(user_id));
+		User u = service.getByid(user_id);
+		model.addAttribute("Products", productservice.getAllproductsbyuser(u));
+
+		logger.debug("Displaying products " + productservice.getAllproductsbyuser(u) + "added by the seller "
+				+ user.getName());
 
 		return "products/prolist";
 
@@ -164,6 +200,10 @@ public class AdminController {
 
 	@PostMapping("/products/prolist/{id}/{userid}")
 	public String DeleteProduct(Model model, @PathVariable("id") int id, @PathVariable("userid") int user_id) {
+
+		logger.info("Deleting the product");
+		Products p = productservice.getProduct(id);
+		p.setUser(null);
 		productservice.deleteProduct(id);
 		return "redirect:/products/prolist/" + user_id;
 
@@ -174,8 +214,9 @@ public class AdminController {
 	 * updateproduct page
 	 */
 	@GetMapping("/products/updateproduct/{id}")
-	public String updateproduct(@PathVariable("id") int id, Model model) {
+	public String updateproduct(@PathVariable("id") int id, Model model, @ModelAttribute Products pro) {
 
+		logger.info("Navigation towards updating the product");
 		model.addAttribute("product", productservice.getProduct(id));
 
 		return "products/updateproduct";
@@ -187,22 +228,25 @@ public class AdminController {
 
 	@PostMapping("/products/updateproduct/{id}")
 	public String updateProduct(@PathVariable("id") int id, @ModelAttribute Products pro,
-			@RequestParam("submit") String submit, Model model)  {
-		// ModelAndView view = new ModelAndView("products/afterupdateprolist");
-		Products p = productservice.getProduct(pro.getId());
-	
-		
-		
-		pro.setImage(p.getImage());
-		pro.setEimage(p.getEimage());
-//		int ui=productservice.getuserid(id);
+			@RequestParam("submit") String submit, Model model) throws Exception {
 
-		productservice.updateProduct(pro);
-		pro.setUserid(uid);
-		model.addAttribute("add", pro.getUserid());
-		model.addAttribute("Products", productservice.getAllproductsbyuser(id));
-		
-		return "redirect:/products/prolist/" +p.getUserid();
+		Products products = productservice.getProduct(id);
+
+		try {
+			logger.info("Updating the fields required for the existing product_id " + id);
+
+			logger.debug("Existing product details  " + productservice.getProduct(id));
+
+			productservice.productUpdate(pro.getProductName(), pro.getPrice(), pro.getWeight(), pro.getQuantity(),
+					pro.getProductDescription(), pro.getId());
+
+			model.addAttribute("add", pro.getUser());
+			model.addAttribute("Products", productservice.getAllproductsbyuser(products.getUser()));
+			logger.debug("Updated details " + productservice.getProduct(id));
+		} catch (NullPointerException e) {
+			return "redirect:/products/prolist/" + products.getUser().getId();
+		}
+		return "redirect:/products/prolist/" + products.getUser().getId();
 	}
 
 	/*
@@ -211,6 +255,7 @@ public class AdminController {
 	 */
 	@GetMapping("/admin/updateProfile/{id}")
 	public String adminUpdate(@PathVariable("id") int id, Model model) {
+		logger.info("Updating required fields");
 		model.addAttribute("user", service.getuser(id));
 		return "/admin/updateProfile";
 	}
@@ -221,9 +266,15 @@ public class AdminController {
 
 	@PostMapping("/admin/updateProfile/{id}")
 	public String adminUpdateInsert(@PathVariable("id") int id, @ModelAttribute User user, Model model) {
-		System.out.println("SUCCESS");
+
+		logger.info("Updating the profile details of the seller " + id);
+
 		model.addAttribute("user", service.getuser(id));
-		service.updateUser(user);
+
+		service.updateUser(user.getName(), user.getEmail(), user.getContact(), user.getStreet(), user.getArea(),
+				user.getCity(), user.getPincode(), id);
+
+		logger.debug("Successful updation for the seller " + id);
 
 		return "redirect:/admin/adminhome/{id}";
 	}

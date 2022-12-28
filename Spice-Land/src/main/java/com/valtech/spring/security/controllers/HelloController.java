@@ -1,11 +1,11 @@
 package com.valtech.spring.security.controllers;
 
-import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -14,8 +14,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.valtech.spring.security.config.WebSecurityConfig;
+import com.valtech.spring.security.entity.MyUserDetails;
+import com.valtech.spring.security.entity.Role;
 import com.valtech.spring.security.entity.User;
 import com.valtech.spring.security.model.RegisterUserModel;
+import com.valtech.spring.security.repo.Rolerepo;
 import com.valtech.spring.security.service.UserDetailsService;
 
 @Controller
@@ -26,16 +30,21 @@ public class HelloController {
 
 	int uid;
 
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
+	@Autowired
+	private WebSecurityConfig webSecurityConfig;
+
+	@Autowired
+	private Rolerepo roleRepo;
+
+	private static final Logger logger = LoggerFactory.getLogger(HelloController.class);
 
 	/*
 	 * If the seller/admin is new user Navigate to the registration page .
 	 */
 	@GetMapping("/register")
-	public String register() {
+	public String register(Model model) throws Exception {
+		logger.info("Navigating towards registration page");
+		model.addAttribute("roleval", roleRepo.findAll());
 		return "/register";
 	}
 
@@ -47,41 +56,44 @@ public class HelloController {
 	 */
 
 	@PostMapping("/register")
-	public String registerUser(@ModelAttribute User user, @RequestParam("username") String username,
-			@RequestParam("role") String role, @RequestParam("pass") String pass, Model model,
-			@RequestParam("cnfmpass") String cnfmpass) {
+	public String registerUser(@ModelAttribute RegisterUserModel registerUserModel,
+			@RequestParam("username") String username, @RequestParam("role") String role,
+			@RequestParam("pass") String pass, Model model, @RequestParam("cnfmpass") String cnfmpass) {
+		model.addAttribute("roleval", roleRepo.findAll());
 
-		// user.setRole(user.getRole());
-		String u;
-		u = service.findUser(username);
+		String u = service.findUser(username);
+
 		if (u == "false") {
+			logger.debug("Existence in database is false for " + u);
+			if (registerUserModel.getPass().equals(registerUserModel.getCnfmpass())) {
+				User user = new User(registerUserModel.getName(), registerUserModel.getEmail(),
+						registerUserModel.getUsername(),
+						webSecurityConfig.passwordEncoder().encode(registerUserModel.getPass()),
+						registerUserModel.getStreet(), registerUserModel.getArea(), registerUserModel.getCity(),
+						registerUserModel.getPincode(), registerUserModel.getContact(), registerUserModel.getRole());
 
-			if (user.getPass().equals(user.getCnfmpass())) {
-				user.setPass(passwordEncoder().encode(pass));
-				user.setCnfmpass(passwordEncoder().encode(cnfmpass));
-				user.setRoles(Arrays.asList(role));
-				user.setEnabled(true);
-
+				Role role1 = roleRepo.findByName(role);
+				Set<Role> roles = new HashSet<Role>();
+				roles.add(role1);
+				user.setRoles(roles);
+				logger.debug("Creating the user with details " + user);
 				service.createUser(user);
+				MyUserDetails use = new MyUserDetails(user);
 				return "redirect:/login";
+
 			} else {
+				logger.error("The passwords that is " + pass + " and " + cnfmpass + " doesn't match.");
 				model.addAttribute("error", "Password and Confirm Password does not match");
-
-				return "register";
+				return "/register";
 			}
-
 		}
-		model.addAttribute("userna", "Username Already Exists");
-		return "register";
+		model.addAttribute("username", "Username Already Exists");
+		return "/register";
 	}
 
 	@GetMapping("/login")
-	public String login() {
-		return "login";
-	}
-
-	@GetMapping("register/login")
-	public String login1() {
+	public String login(Model model) {
+		logger.info("Navigation towards login page");
 		return "login";
 	}
 
@@ -98,62 +110,53 @@ public class HelloController {
 		String s1 = "ADMIN";
 		String s2 = "USER";
 		String s3 = "DELIVERY";
-		// System.out.println(passwordEncoder().encode(registerUserModel.getPass()));
-		// System.out.println(service.findUserPass(registerUserModel.getUsername()));
-		// System.out.println(passwordEncoder().matches((registerUserModel.getPass()),service.findUserPass(registerUserModel.getUsername())));
 
 		try {
-
 			String role = service.getrole(registerUserModel.getUsername());
-
+			logger.debug("Logging with the role as " + role);
 			if (role.equals(s1)) {
-				if (passwordEncoder().matches((registerUserModel.getPass()),
+
+				if (webSecurityConfig.passwordEncoder().matches((registerUserModel.getPass()),
 						service.findUserPass(registerUserModel.getUsername()))
 						&& registerUserModel.getUsername().equals(service.findUser(registerUserModel.getUsername()))) {
 
-					System.out.println(
-							registerUserModel.getUsername() + service.findUser(registerUserModel.getUsername()));
-					System.out.println("PASSWORD");
-					System.out.println(registerUserModel.getPass() + service.findUser(registerUserModel.getPass()));
+					logger.debug(registerUserModel.getUsername() + service.findUser(registerUserModel.getUsername()));
 
-					System.out.println("SUCCESS");
 					int id = service.getId(registerUserModel.getUsername());
 
 					uid = id;
 
+					logger.debug(registerUserModel.getUsername() + "has successfully logged-in as " + role);
 					return url = "redirect:/admin/adminhome/" + id;
 
 				}
 
 				else {
-					String message = "Invalid Username and Password";
-					System.out.println(message);
-					model.addAttribute("mess", message);
-					return "login";
+
+					model.addAttribute("error", "Invalid Username and Password");
+					return "/login";
 
 				}
 
 			} else if (role.equals(s2)) {
 
-				if (passwordEncoder().matches((registerUserModel.getPass()),
+				if (webSecurityConfig.passwordEncoder().matches((registerUserModel.getPass()),
 						service.findUserPass(registerUserModel.getUsername()))
 						&& registerUserModel.getUsername().equals(service.findUser(registerUserModel.getUsername()))) {
 
-					System.out.println(
-							registerUserModel.getUsername() + service.findUser(registerUserModel.getUsername()));
+					logger.debug(registerUserModel.getUsername() + service.findUser(registerUserModel.getUsername()));
 
-					System.out.println("SUCCESS");
+					logger.debug("Successful");
+
 					int id = service.getId(registerUserModel.getUsername());
-
+					logger.debug(registerUserModel.getUsername() + "has successfully logged-in as " + role);
 					return url = "redirect:/user/userhome/" + id;
 
 				}
 
 				else {
-					String message = "Invalid Username and Password";
-					System.out.println(message);
-					model.addAttribute("mess", message);
-					return "login";
+					model.addAttribute("error", "Invalid Username and Password");
+					return "/login";
 
 				}
 
@@ -161,39 +164,35 @@ public class HelloController {
 
 			else if (role.equals(s3)) {
 
-				if (passwordEncoder().matches((registerUserModel.getPass()),
+				if (webSecurityConfig.passwordEncoder().matches((registerUserModel.getPass()),
 						service.findUserPass(registerUserModel.getUsername()))
 						&& registerUserModel.getUsername().equals(service.findUser(registerUserModel.getUsername()))) {
 
-					System.out.println(
-							registerUserModel.getUsername() + service.findUser(registerUserModel.getUsername()));
+					logger.debug(registerUserModel.getUsername() + service.findUser(registerUserModel.getUsername()));
 
-					System.out.println("SUCCESS");
 					int id = service.getId(registerUserModel.getUsername());
-
+					logger.debug(registerUserModel.getUsername() + "has successfully logged-in as " + role);
 					return url = "redirect:/delivery/deliverhome/" + id;
 
 				}
 
 				else {
-					String message = "Invalid Username and Password";
-					System.out.println(message);
-					model.addAttribute("mess", message);
-					return "login";
+					model.addAttribute("error", "Invalid Username and Password");
+					return "/login";
 
 				}
 
 			}
 
 		} catch (Exception n) {
-			String message = "Invalid Username and Password";
-			System.out.println(message);
-			model.addAttribute("mess", message);
-			return "login";
+			logger.error("Invalid credentials");
+			model.addAttribute("error", "Invalid Username and Password");
+			return "/login";
 		}
-		return "login";
+		return "/login";
 
 	}
+
 	/*
 	 * If seller/admin forgets password,will have an option to change the
 	 * password
@@ -246,14 +245,11 @@ public class HelloController {
 
 	@PostMapping("/changepassword/{username}")
 	public String adminupdatechangePassword(@PathVariable("username") String username,
-			@RequestParam("pass") String password, @RequestParam("cnfmpass") String confirmPassword, Model model) {
+			@RequestParam("pass") String password, @RequestParam("cnfmpass") String confirmPassword, Model model)
+			throws Exception {
 		if (password.equals(confirmPassword)) {
-			User u;
-			u = service.findentierUser(username);
-			u.setPass(passwordEncoder().encode(password));
-			u.setCnfmpass(passwordEncoder().encode(confirmPassword));
-			service.updateUser(u);
-			System.out.println(u.getPass());
+
+			service.forgotPassword(username, webSecurityConfig.passwordEncoder().encode(password));
 			return "redirect:/login";
 
 		} else {
@@ -268,11 +264,6 @@ public class HelloController {
 	@GetMapping("/index")
 	public String index() {
 		return "Index";
-	}
-
-	@GetMapping("/customer")
-	public String pay() {
-		return "customer";
 	}
 
 }

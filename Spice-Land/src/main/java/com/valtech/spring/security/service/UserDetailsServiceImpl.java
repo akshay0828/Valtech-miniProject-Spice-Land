@@ -5,18 +5,48 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import com.valtech.spring.security.entity.MyUserDetails;
 import com.valtech.spring.security.entity.User;
 import com.valtech.spring.security.repo.UserReopsitory;
 
 @Service
-public class UserDetailsServiceImpl implements UserDetailsService {
+public class UserDetailsServiceImpl
+		implements UserDetailsService, org.springframework.security.core.userdetails.UserDetailsService {
 
 	@Autowired
 	private UserReopsitory userRepository;
 
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
+
 	private static final Logger logger = LoggerFactory.getLogger(UserDetailsServiceImpl.class);
+
+	@Override
+	public void forgotPassword(String username, String password) throws Exception {
+
+		logger.info("Updating password with JDBC Query");
+		String sql = "update users set pass = ? where username = ?";
+
+		jdbcTemplate.update(sql, password, username);
+
+	}
+
+	@Override
+
+	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+		User user = userRepository.findByUsername(username);
+
+		if (user == null) {
+			throw new UsernameNotFoundException("Could not find user");
+		}
+
+		return new MyUserDetails(user);
+	}
 
 	// To delete details of all users.
 	@Override
@@ -122,11 +152,14 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
 	// To update the details of the user.
 	@Override
-	public User updateUser(User user) {
-		logger.info("Updating User with id" + user.getId());
-		User u = userRepository.save(user);
-		logger.debug("User updated with id=" + user.getId());
-		return u;
+	public void updateUser(String name, String email, String contact, String street, String area, String city,
+			String pincode, int id) {
+		logger.info("Updating User with id" + id);
+		String sql = "update users set name = ? ,email= ?, contact=?, street= ?, area= ?, city=?, pincode=? where id = ?";
+
+		jdbcTemplate.update(sql, name, email, contact, street, area, city, pincode, id);
+		logger.debug("User updated with id=" + id);
+
 	}
 
 	// List of the user by role.

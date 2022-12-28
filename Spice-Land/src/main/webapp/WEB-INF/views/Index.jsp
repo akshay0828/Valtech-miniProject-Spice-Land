@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SpiceLand</title>
     <!-- StyleSheets -->
-    <link rel="stylesheet" href="/css/styles.css" />
+    <!-- <link rel="stylesheet" href="static/css/styles.css" /> -->
+    
    
 </head>
   
@@ -273,6 +274,7 @@
 
  
     <!-- Scripts -->
+    <link rel="stylesheet" type="text/css" href="/css/styles.css"/>
     <script src="/js/main.js"></script>
   </body>
 </html>

@@ -1,12 +1,15 @@
 package com.valtech.spring.security.entity;
 
-
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
+import javax.persistence.ManyToOne;
 
 @Entity
 public class Products {
@@ -19,18 +22,29 @@ public class Products {
 	private float weight;// Weight of the product.
 	private String productDescription;// Description of the product.
 	private int quantity;// Quantity of the product avaliable.
+
 	@Lob
-	@Column(columnDefinition = "MEDIUMBLOB")
+	// @Column(columnDefinition = "MEDIUMBLOB")
 	private String image;
 
 	@Lob
 	@Column(name = "EIMAGE")
 	private byte[] eimage;
 
-	private int userid;
-
+	@ManyToOne(targetEntity = User.class, cascade = { CascadeType.MERGE, CascadeType.PERSIST }, fetch = FetchType.EAGER)
+	@JoinColumn(name = "user_id", referencedColumnName = "id")
+	private User user;
 	// Parameterless Constructor
+
 	public Products() {
+	}
+
+	public User getUser() {
+		return user;
+	}
+
+	public void setUser(User user) {
+		this.user = user;
 	}
 
 	public Products(String productName, double price, float weight, String productDescription, int quantity,
@@ -46,20 +60,8 @@ public class Products {
 
 	}
 
-	public Products(String productName, double price, float weight, String productDescription, int quantity,
-			String image, int userid) {
-		super();
-		this.productName = productName;
-		this.price = price;
-		this.weight = weight;
-		this.productDescription = productDescription;
-		this.quantity = quantity;
-		this.image = image;
-		this.userid = userid;
-	}
-
 	public Products(int id, String productName, double price, float weight, String productDescription, int quantity,
-			String image, byte[] eimage, int userid) {
+			String image, byte[] eimage, User user) {
 		super();
 		this.id = id;
 		this.productName = productName;
@@ -69,7 +71,32 @@ public class Products {
 		this.quantity = quantity;
 		this.image = image;
 		this.eimage = eimage;
-		this.userid = userid;
+		this.user = user;
+	}
+
+	public Products(String productName, double price, float weight, String productDescription, int quantity,
+			String image) {
+		super();
+		this.productName = productName;
+		this.price = price;
+		this.weight = weight;
+		this.productDescription = productDescription;
+		this.quantity = quantity;
+		this.image = image;
+	}
+
+	public Products(int id, String productName, double price, float weight, String productDescription, int quantity,
+			String image, User user) {
+		super();
+		this.id = id;
+		this.productName = productName;
+		this.price = price;
+		this.weight = weight;
+		this.productDescription = productDescription;
+		this.quantity = quantity;
+		this.image = image;
+		this.eimage = eimage;
+		this.user = user;
 	}
 
 	// Getters and Setters of the variables.
@@ -136,20 +163,6 @@ public class Products {
 
 	public void setEimage(byte[] eimage) {
 		this.eimage = eimage;
-	}
-
-	public int getUserid() {
-		return userid;
-	}
-
-	public void setUserid(int userid) {
-		this.userid = userid;
-	}
-
-	@Override
-	public String toString() {
-		return "Products [id=" + id + ", productName=" + productName + ", price=" + price + ", weight=" + weight
-				+ ", productDescription=" + productDescription + ", quantity=" + quantity + "]";
 	}
 
 }

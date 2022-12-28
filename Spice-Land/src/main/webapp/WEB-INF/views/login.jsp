@@ -12,8 +12,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SpiceLand</title>
     <!-- StyleSheets -->
-    <link rel="stylesheet" href="/css/loginStyle.css" />
+     <link rel="stylesheet" type="text/css" href="/css/loginStyle.css" /> 
 </head>  
+
 
 <body> 
 
@@ -27,13 +28,13 @@
 
     <div class="loginbox">
         <img class="logo" src="https://cdn1.iconfinder.com/data/icons/large-glossy-icons/512/User_login.png">
-        <h1>Sign In</h1>
+        <h1>Sign In  </h1>
         <form th:action="@{/login}" method="post">
             <label>Username</label>
             <input type="text" placeholder="Enter Username"  id="username"  name="username"  required pattern="[A-Za-z]{3,10}"  title="User name must be between 3-10 characters!!" >
             <label>Password</label>
             <input type="password" placeholder="Enter Password"  id="exampleInputPassword1" name="pass" required pattern="[A-Za-z0-9#@$&]{3,10}" title="Password must be between 3-10 characters and type only valid characters!!">
-           <center> ${mess} </center>
+          <center> ${error }</center>
             <input type="submit" value="Sign In">
            
            <center><a href="forgotpassword" id="a1">Forgot Password</a></center> 
