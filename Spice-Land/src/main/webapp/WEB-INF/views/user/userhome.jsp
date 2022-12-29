@@ -538,9 +538,11 @@ height: 45%;
 /*Setting the background image using before pseudo selector*/
 #container1::before {
 	content: '';
-	background:
-		url("https://i.pinimg.com/originals/74/85/02/7485027689f1947658f7a0b252f1c56b.gif")
-		no-repeat center center/cover;
+	 background-image: url('https://images.askmen.com/news/sports/_1516983344.gif') ;
+		 background-size: cover;
+		background-repeat: no-repeat;
+	background-attachment: fixed;
+	background-position: center center;
 	width: 99vw;
 	height: 59vh;
 	position: absolute;
@@ -550,7 +552,7 @@ height: 45%;
 	margin-right: 45px;
 	font-weight: bold;
 	z-index: -1;
-	opacity: 0.89;
+	opacity: 1;
 	border: 2px solid black;
 	/* border-bottom-left-radius: 100px; */
 }

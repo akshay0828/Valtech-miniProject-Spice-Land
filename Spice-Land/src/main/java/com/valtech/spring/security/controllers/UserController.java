@@ -134,6 +134,7 @@ public class UserController {
 				final int a = p.getQuantity() - 1;
 				logger.debug("Available quantity was " + p.getQuantity()
 						+ " and after addition of item to cart the available quantity is " + a);
+				cartLine.setProdid(prod_id);
 				cartLineService.createCartLine(check);
 
 			}
@@ -164,7 +165,7 @@ public class UserController {
 			final CartLine c = new CartLine(prod_id, p.getProductName(), p.getPrice(), u.getId(), id);
 			cartLine.setAdminIds(u.getId());
 			cartLine.setUserid(id);
-
+			cartLine.setProdid(prod_id);
 			c.setUserid(id);
 
 			cartLineService.createCartLine(c);
