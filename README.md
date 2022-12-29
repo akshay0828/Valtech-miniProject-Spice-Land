@@ -5,7 +5,7 @@
     <li>Divyashree M D</li>    
     <li>Irfan Katarki</li>   
     <li>Yeshaswini C</li>   
-</ul>
+</ul> 
 
  	 
 ## SpiceLand  Project
