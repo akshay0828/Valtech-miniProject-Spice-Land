@@ -90,7 +90,7 @@ public class HelloController {
 				return "/register";
 			}
 		}
-		model.addAttribute("username", "Username Already Exists");
+		model.addAttribute("error", "Username Already Exists");
 		return "/register";
 	}
 

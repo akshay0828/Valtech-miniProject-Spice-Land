@@ -588,6 +588,7 @@ height: 45%;
 
 </head>
 <body>
+
 	<form>
 		<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
 			<div class="container-fluid">
@@ -606,6 +607,14 @@ height: 45%;
 					<h4 id="welcome">Welcome ${add }</h4>
 					<ul class="navbar-nav mr-auto"></ul>
 					<ul class="navbar-nav">
+					
+					
+					<form action="user/userhome/${user }" method="GET">
+      <input type="text" name="text"  class="search" placeholder="Search here!" >
+      <input type="submit" name="submit" class="submit"  value="Search">
+    </form>
+				
+					
 						<li class="nav-item active"><a class="nav-link"
 							th:href="@{/}" href="#">Home</a></li>
 						<li class="nav-item active"><a class="nav-link"
@@ -642,9 +651,11 @@ height: 45%;
 		
 			<center>
 
-				<div class="container-fostrap">
+				<div class="container-fostrap" onload="click()">
 					<div class="row">
-
+				<div style="color: red;" align="center">
+							<h3>${error}</h3>
+						</div>
 						<c:forEach items="${Products}" var="product">
 
 							<div class="col-xs-12 col-sm-6 col-md-6 col-lg-4"
